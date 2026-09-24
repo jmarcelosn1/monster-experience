@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-BR" class="is-loading is-locked">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Monster Energy · sete latas</title>
+    <meta name="description" content="Estudo conceitual: uma lata, sete versões da linha Monster Energy." />
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" href="data:," />
+    <link rel="preload" href="/claw.webp" as="image" />
+    <link rel="preload" href="/models/can.glb" as="fetch" crossorigin />
+    <!-- Só a abertura: precisa estar pronta antes do CSS do app chegar -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #000;
+      }
+      .is-locked {
+        overflow: hidden;
+      }
+      .intro {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        background: #000;
+        overflow: hidden;
+      }
+      .intro__glow {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: min(95vh, 950px);
+        aspect-ratio: 1;
+        translate: -50% -50%;
+        background: radial-gradient(closest-side, rgba(169, 248, 3, 0.2), transparent);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .intro__logo {
+        position: relative;
+        height: min(58vh, 560px);
+        width: auto;
+        aspect-ratio: 604 / 900;
+        overflow: visible;
+      }
+      .intro__spark {
+        fill: none;
+        stroke: #d8ff6a;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .intro__spark--soft {
+        stroke: #a9f803;
+        stroke-width: 16;
+        opacity: 0.6;
+      }
+      .intro__count {
+        position: absolute;
+        left: 50%;
+        bottom: 36px;
+        translate: -50% 0;
+        margin: 0;
+        color: #5e636a;
+        font: 600 13px/1 system-ui, sans-serif;
+        font-variant-numeric: tabular-nums;
+        opacity: 0;
+        transition: opacity 0.4s;
+      }
+      .intro__count.is-visible {
+        opacity: 1;
+      }
+    </style>
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <div class="intro" data-intro aria-hidden="true">
+      <div class="intro__glow" data-intro-glow></div>
+      <svg class="intro__logo" data-logo viewBox="0 0 604 900">
+        <defs>
+          <clipPath id="claw-cut"><path data-cut d="M0 0" /></clipPath>
+          <filter id="spark-blur" x="-20%" y="-50%" width="140%" height="200%">
+            <feGaussianBlur stdDeviation="6" />
+          </filter>
+        </defs>
+        <image href="/claw.webp" width="604" height="900" clip-path="url(#claw-cut)" />
+        <path class="intro__spark intro__spark--soft" data-spark-soft d="" filter="url(#spark-blur)" />
+        <path class="intro__spark" data-spark d="" />
+      </svg>
+      <p class="intro__count" data-loader><span data-loader-value>0</span>%</p>
+    </div>
+
+    <div class="stage" aria-hidden="true">
+      <canvas class="stage__canvas" data-canvas></canvas>
+      <img class="stage__fallback-bg" data-fallback-bg alt="" decoding="async" />
+      <img class="stage__poster" data-poster alt="" decoding="async" />
+    </div>
+
+    <header class="bar">
+      <p class="bar__brand">Monster Energy</p>
+    </header>
+
+    <div class="beats" data-beats aria-hidden="true">
+      <div class="beat" data-beat>
+        <p>Toda lata começa em alumínio.</p>
+        <p>Role para imprimir o rótulo.</p>
+      </div>
+      <div class="beat" data-beat>
+        <p>Sete versões, uma lata só.</p>
+        <p>Esta é a Ultra, a primeira da fila.</p>
+      </div>
+    </div>
+
+    <section class="catalog" data-catalog aria-labelledby="product">
+      <nav class="catalog__index" aria-label="Produtos">
+        <ol data-index></ol>
+      </nav>
+      <div class="catalog__info">
+        <h1 class="catalog__name" id="product" data-name></h1>
+        <p class="catalog__caption"><span data-caption></span><span data-caption></span></p>
+      </div>
+      <p class="catalog__facts" data-facts></p>
+      <p class="sr-only" aria-live="polite" data-announce></p>
+    </section>
+
+    <main class="story" data-story></main>
+
+    <div class="journey" data-journey-layer>
+      <section class="wheel" data-wheel aria-labelledby="collection-title">
+        <div class="wheel__glow"></div>
+        <div class="wheel__stage">
+          <div class="wheel__drum" data-wheel-drum></div>
+        </div>
+        <h2 class="wheel__label" id="collection-title" data-wheel-label>A coleção</h2>
+        <div class="wheel__panel" data-wheel-title>
+          <p class="wheel__name" data-wheel-name></p>
+          <p class="wheel__product" data-wheel-product></p>
+          <p class="wheel__desc" data-wheel-desc></p>
+          <p class="wheel__facts" data-wheel-facts></p>
+          <button class="wheel__go" type="button" data-wheel-go>Ver no catálogo</button>
+        </div>
+        <ol class="wheel__index" data-wheel-index aria-label="Produtos da coleção"></ol>
+      </section>
+    </div>
+
+    <svg class="rip" aria-hidden="true" preserveAspectRatio="none">
+      <path data-rip-soft class="rip__soft" />
+      <path data-rip-edge class="rip__edge" />
+    </svg>
+
+    <footer class="foot">
+      <p>Estudo conceitual, sem vínculo com a Monster Energy Company. Marcas, nomes e embalagens pertencem aos seus donos.</p>
+    </footer>
+  </body>
+</html>

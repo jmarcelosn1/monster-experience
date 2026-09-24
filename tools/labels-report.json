@@ -1,0 +1,86 @@
+{
+  "lagoon": {
+    "can": {
+      "top": 52,
+      "bottom": 1621,
+      "cx": 470.5,
+      "halfW": 324.5
+    },
+    "heightOverWidth": "2.418",
+    "tabCandidates": [
+      "#F4F4F3",
+      "#0C0C0C",
+      "#D1D1D1"
+    ]
+  },
+  "ritual": {
+    "can": {
+      "top": 0,
+      "bottom": 1536,
+      "cx": 512,
+      "halfW": 305
+    },
+    "heightOverWidth": "2.518",
+    "tabCandidates": [
+      "#F5F6F7",
+      "#04B3EA",
+      "#0ECBF7"
+    ]
+  },
+  "bloom": {
+    "can": {
+      "top": 0,
+      "bottom": 1536,
+      "cx": 511.5,
+      "halfW": 313.5
+    },
+    "heightOverWidth": "2.450",
+    "tabCandidates": [
+      "#F7F7F7",
+      "#070405",
+      "#ED4E87"
+    ]
+  },
+  "void": {
+    "can": {
+      "top": 1,
+      "bottom": 1528,
+      "cx": 512,
+      "halfW": 309
+    },
+    "heightOverWidth": "2.471",
+    "tabCandidates": [
+      "#B0B1B1",
+      "#929394",
+      "#0271AF"
+    ]
+  },
+  "flare": {
+    "can": {
+      "top": 18,
+      "bottom": 1523,
+      "cx": 511,
+      "halfW": 306
+    },
+    "heightOverWidth": "2.459",
+    "tabCandidates": [
+      "#034E0C",
+      "#033207",
+      "#0A8E33"
+    ]
+  },
+  "apex": {
+    "can": {
+      "top": 9,
+      "bottom": 1522,
+      "cx": 511,
+      "halfW": 303
+    },
+    "heightOverWidth": "2.497",
+    "tabCandidates": [
+      "#070705",
+      "#31312D",
+      "#50504C"
+    ]
+  }
+}

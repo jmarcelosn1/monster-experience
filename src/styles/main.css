@@ -1,0 +1,504 @@
+/* Tokens de cor: theme.ts reescreve a cada quadro do catálogo (valores da Ultra).
+   Uma família só, Archivo; o eixo de largura (wdth) é o recurso tipográfico. */
+:root {
+  --deep: #080a0e;
+  --glow: #dde6ee;
+  --ink: #066aa0;
+  --fg: #0e1013;
+  --muted: #2e3238;
+  --faint: #4e535a;
+  --shade: rgba(255, 255, 255, 0.75);
+
+  --font: 'Archivo Variable', 'Archivo', system-ui, sans-serif;
+  --gutter: clamp(20px, 3.2vw, 56px);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: #000;
+  color: var(--fg);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- palco fixo */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: #000;
+}
+
+.stage__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* sem WebGL: fundo e lata em foto */
+.stage__fallback-bg,
+.stage__poster {
+  display: none;
+}
+
+.no-webgl .stage__fallback-bg {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-webgl .stage__poster {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 64vh;
+  translate: -50% -50%;
+}
+
+/* ---------------------------------------------------------------- marca */
+
+.bar {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 6;
+  padding: var(--gutter);
+  pointer-events: none;
+  text-shadow: 0 1px 12px var(--shade);
+}
+
+.bar__brand {
+  font-size: 15px;
+  font-weight: 700;
+  font-variation-settings: 'wdth' 125;
+  letter-spacing: 0.01em;
+  color: var(--fg);
+}
+
+/* no preto da apresentação e sobre a roda, a marca é clara */
+.is-dark-stage .bar,
+.stage-off .bar {
+  --fg: #f4f4f1;
+  --shade: transparent;
+}
+
+/* ---------------------------------------------------------------- apresentação */
+
+.beats {
+  position: fixed;
+  left: var(--gutter);
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  translate: 0 -50%;
+  color: #f4f4f1;
+  pointer-events: none;
+}
+
+.beat {
+  grid-area: 1 / 1;
+  opacity: 0;
+}
+
+.beat p:first-child {
+  max-width: 11ch;
+  font-size: clamp(28px, 2.6vw, 44px);
+  font-weight: 700;
+  font-variation-settings: 'wdth' 112;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+}
+
+.beat p + p {
+  max-width: 26ch;
+  margin-top: 16px;
+  font-size: 17px;
+  color: #8b9096;
+}
+
+/* ---------------------------------------------------------------- catálogo */
+
+.catalog {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  /* sombra curta para a letra e longa para o entorno: lê sobre a cena sem cobri-la */
+  text-shadow:
+    0 1px 2px var(--shade),
+    0 0 18px var(--shade);
+}
+
+.catalog__index,
+.catalog__info,
+.catalog__facts {
+  pointer-events: auto;
+}
+
+.catalog__index {
+  position: absolute;
+  left: var(--gutter);
+  top: 50%;
+  translate: 0 -50%;
+}
+
+.catalog__index ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.catalog__index button {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-height: 34px;
+  padding: 5px 0;
+  color: var(--faint);
+  transition:
+    color 0.4s var(--ease-out),
+    translate 0.5s var(--ease-out);
+}
+
+.catalog__index .n {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.catalog__index .w {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.catalog__index button:hover {
+  color: var(--fg);
+}
+
+.catalog__index button[aria-current='true'] {
+  color: var(--ink);
+  translate: 10px 0;
+}
+
+.catalog__info {
+  position: absolute;
+  left: var(--gutter);
+  bottom: var(--gutter);
+  max-width: min(34vw, 480px);
+}
+
+.catalog__name {
+  --wdth: 112;
+  font-size: clamp(40px, 4.2vw, 72px);
+  font-weight: 800;
+  font-variation-settings: 'wdth' var(--wdth);
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.catalog__caption {
+  margin-top: 18px;
+  font-size: clamp(17px, 1.3vw, 21px);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.catalog__caption span {
+  display: block;
+}
+
+.catalog__caption span + span {
+  color: var(--muted);
+}
+
+.catalog__facts {
+  position: absolute;
+  right: var(--gutter);
+  bottom: var(--gutter);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+/* ---------------------------------------------------------------- percurso */
+
+/* só dá altura ao scroll; tudo o que aparece fica em camadas fixas */
+.story {
+  display: block;
+  height: 1600vh;
+}
+
+.journey {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  overflow: hidden;
+  clip-path: inset(0 0 100% 0);
+}
+
+.rip {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.rip path {
+  fill: none;
+  stroke: var(--glow);
+  stroke-linejoin: round;
+}
+
+.rip__edge {
+  stroke-width: 2;
+}
+
+.rip__soft {
+  stroke-width: 14;
+  opacity: 0.22;
+}
+
+/* ---------------------------------------------------------------- roda de produtos */
+
+.wheel {
+  --wheel-glow: var(--glow);
+  --wheel-deep: var(--deep);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: #f4f4f1;
+  background: #050505;
+  user-select: none;
+}
+
+.wheel__glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(46% 56% at 50% 50%, color-mix(in oklab, var(--wheel-glow) 16%, transparent), transparent 72%),
+    linear-gradient(var(--wheel-deep), #050505);
+}
+
+.wheel__stage {
+  position: absolute;
+  inset: 0;
+  perspective: var(--depth);
+}
+
+.wheel__drum {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-style: preserve-3d;
+}
+
+.wheel__card {
+  position: absolute;
+  width: var(--can-w);
+  height: var(--can-h);
+  margin: calc(var(--can-h) / -2) 0 0 calc(var(--can-w) / -2);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+/* só a lata recortada: sem cartão, sem fundo */
+.wheel__can {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 24px 28px rgba(0, 0, 0, 0.55));
+  -webkit-user-drag: none;
+}
+
+.wheel__label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: var(--ring-title);
+  font-weight: 800;
+  font-variation-settings: 'wdth' 125;
+  letter-spacing: -0.01em;
+  pointer-events: none;
+}
+
+.wheel__panel {
+  position: absolute;
+  left: 6%;
+  top: 50%;
+  translate: 0 -50%;
+  max-width: min(30vw, 420px);
+  pointer-events: none;
+}
+
+.wheel__name {
+  font-size: var(--title);
+  font-weight: 800;
+  font-variation-settings: 'wdth' 112;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--wheel-glow);
+}
+
+.wheel__product {
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #8b9096;
+}
+
+.wheel__desc {
+  margin-top: 18px;
+  font-size: 17px;
+  line-height: 1.5;
+  color: #d2d5d9;
+}
+
+.wheel__facts {
+  margin-top: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--wheel-glow);
+}
+
+.wheel__facts:empty {
+  display: none;
+}
+
+.wheel__go {
+  margin-top: 24px;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: var(--wheel-glow);
+  color: #050505;
+  font-size: 15px;
+  font-weight: 700;
+  transition: translate 0.4s var(--ease-out);
+}
+
+.wheel__go:hover {
+  translate: 0 -2px;
+}
+
+.wheel__index {
+  position: absolute;
+  right: var(--gutter);
+  top: 50%;
+  translate: 0 -50%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-align: right;
+}
+
+.wheel__index button {
+  min-height: 32px;
+  padding: 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6e737a;
+  transition: color 0.4s var(--ease-out);
+}
+
+.wheel__index button span {
+  margin-right: 10px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: #50555b;
+}
+
+.wheel__index button:hover,
+.wheel__index button[aria-current='true'] {
+  color: var(--wheel-glow);
+}
+
+.foot {
+  position: relative;
+  z-index: 7;
+  background: #050505;
+  padding: var(--gutter);
+  font-size: 13px;
+  color: #6e737a;
+}
+
+/* ---------------------------------------------------------------- telas estreitas (sem otimização dedicada) */
+
+@media (max-width: 760px) {
+  .catalog__index,
+  .wheel__index {
+    display: none;
+  }
+
+  .catalog__info,
+  .wheel__panel {
+    max-width: calc(100vw - 2 * var(--gutter));
+  }
+
+  .catalog__facts {
+    display: none;
+  }
+}
