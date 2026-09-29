@@ -1,0 +1,20 @@
+{
+  "$comment": "gerado por tools/build-intro-claw.mjs: retângulo da garra em alturas de tela, a partir do centro",
+  "camera": {
+    "pos": [
+      0,
+      0.004,
+      0.5
+    ],
+    "target": [
+      0,
+      -0.002,
+      0
+    ],
+    "fov": 24
+  },
+  "left": -0.12687,
+  "top": -0.29849,
+  "width": 0.23533,
+  "height": 0.39433
+}

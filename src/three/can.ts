@@ -53,7 +53,7 @@ float sweepBand = 0.0;
                + sweepNoise(vMapUv * vec2(80.0, 34.0) + uSeed) * 0.35;
   float sweepEdge = vSweepY + (sweepN - 0.5) * 0.09 - sweepFront;
   sweepReveal = 1.0 - smoothstep(-0.003, 0.003, sweepEdge);
-  sweepBand = (1.0 - smoothstep(0.0, 0.035, abs(sweepEdge))) * step(0.0001, uSweep) * step(uSweep, 0.9999);
+  sweepBand = (1.0 - smoothstep(0.0, 0.02, abs(sweepEdge))) * step(0.0001, uSweep) * step(uSweep, 0.9999);
   vec4 sampledDiffuseColor = mix(texture2D(map, vMapUv), texture2D(uMapB, vMapUv), sweepReveal);
   diffuseColor *= sampledDiffuseColor;
 #endif
@@ -119,7 +119,7 @@ export async function parseCan(buffer: ArrayBuffer) {
     uMaskB: { value: null as THREE.Texture | null },
     uSweep: { value: 0 },
     uSweepColor: { value: new THREE.Color() },
-    uSweepGlow: { value: 1.8 },
+    uSweepGlow: { value: 0.4 },
     uSeed: { value: 0 },
     uSelfLight: { value: 0.78 },
     uYMin: { value: box.min.y },

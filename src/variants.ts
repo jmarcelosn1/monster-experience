@@ -1,3 +1,5 @@
+import type { IngredientKind } from './three/ingredients';
+
 // Única fonte das sete versões. A ordem é a do catálogo (01–07).
 // Nenhum outro módulo testa o id de uma versão: tudo sai daqui.
 // Arquivos: /labels/<id>.webp (rótulo), /backgrounds/<id>.webp (cena),
@@ -33,6 +35,8 @@ export interface Variant {
   /** vídeo em loop do fundo, quando existir (ex.: '/backgrounds/lagoon.mp4') */
   video?: string;
   color: {
+    /** nome grande do catálogo, escolhido para destacar sobre a cena */
+    name: string;
     /** cor medida no maior bloco de cor lisa da lata */
     can: string;
     /** luz de contorno, onda da troca e partículas */
@@ -43,6 +47,8 @@ export interface Variant {
     deep: string;
   };
   tab: string;
+  /** o que flutua em volta da lata na apresentação e na roda (o que a cena da versão mostra) */
+  ingredients: readonly IngredientKind[];
   /** intensidade da luz de contorno */
   rim: number;
   particles: ParticleStyle;
@@ -55,12 +61,13 @@ export const variants: readonly Variant[] = [
     id: 'origin',
     name: 'Ultra',
     product: 'Monster Energy Ultra',
-    caption: ['Antes da cor, o metal.', 'As outras seis partem daqui.'],
+    caption: ['Branca, prata e azul.', 'As outras seis partem daqui.'],
     description: 'A lata branca da linha Ultra: rótulo prata com arabescos, a garra em cinza e o Energy em azul.',
     facts: { volume: '473 ml', sugar: 'Sem açúcar' },
     tone: 'light',
-    color: { can: '#D9DCDF', glow: '#DDE6EE', ink: '#066AA0', deep: '#080A0E' },
+    color: { name: '#0E1013', can: '#D9DCDF', glow: '#DDE6EE', ink: '#066AA0', deep: '#080A0E' },
     tab: '#BFC4C9',
+    ingredients: ['ice', 'lemon'],
     rim: 5,
     particles: { ...still, speed: 0.004, direction: [0, 1], size: 0.8, opacity: 0.22 },
   },
@@ -72,8 +79,9 @@ export const variants: readonly Variant[] = [
     description: 'Verde-limão com palmeiras, ondas e ilhas desenhadas em prata em volta da lata.',
     facts: { volume: '473 ml', sugar: 'Sem açúcar' },
     tone: 'dark',
-    color: { can: '#67CD0A', glow: '#67CD0A', ink: '#67CD0A', deep: '#040D01' },
+    color: { name: '#FFFFFF', can: '#67CD0A', glow: '#67CD0A', ink: '#67CD0A', deep: '#040D01' },
     tab: '#141414',
+    ingredients: ['lime', 'ice'],
     rim: 6,
     particles: { ...still, speed: 0.012, direction: [0.08, 1], size: 0.9, opacity: 0.28 },
   },
@@ -85,8 +93,9 @@ export const variants: readonly Variant[] = [
     description: 'Da família Juice Monster: fundo azul, garra cor de manga e caveiras floridas inspiradas no Día de Muertos.',
     facts: {},
     tone: 'dark',
-    color: { can: '#01B4EF', glow: '#FDB902', ink: '#FDB902', deep: '#000C16' },
+    color: { name: '#FFFFFF', can: '#01B4EF', glow: '#FDB902', ink: '#FDB902', deep: '#000C16' },
     tab: '#0AA6E0',
+    ingredients: ['mango', 'marigold'],
     rim: 6,
     particles: { ...still, speed: 0.003, direction: [0, 1], swirl: 0.18, size: 0.9, opacity: 0.32 },
   },
@@ -98,8 +107,9 @@ export const variants: readonly Variant[] = [
     description: 'Rosa do topo à base, com rosas e espinhos desenhados em prata ao redor da garra.',
     facts: { volume: '473 ml', sugar: 'Sem açúcar' },
     tone: 'light',
-    color: { can: '#E8316A', glow: '#FF5C8D', ink: '#A8144A', deep: '#160407' },
+    color: { name: '#0E1013', can: '#E8316A', glow: '#FF5C8D', ink: '#A8144A', deep: '#160407' },
     tab: '#E8467F',
+    ingredients: ['rose', 'ice'],
     rim: 6,
     particles: { ...still, speed: 0.006, direction: [0.3, -1], swirl: 0.04, size: 1.2, opacity: 0.3 },
   },
@@ -111,8 +121,9 @@ export const variants: readonly Variant[] = [
     description: 'Azul que escurece até o preto nas bordas, com a garra branca no centro e gotas desenhadas.',
     facts: { volume: '473 ml', sugar: 'Zero açúcar' },
     tone: 'dark',
-    color: { can: '#014694', glow: '#01B7F7', ink: '#01B7F7', deep: '#030A18' },
+    color: { name: '#FFFFFF', can: '#014694', glow: '#01B7F7', ink: '#01B7F7', deep: '#030A18' },
     tab: '#0271AF',
+    ingredients: ['ice', 'shard'],
     rim: 7,
     particles: { ...still, speed: 0.0015, direction: [0, 1], size: 0.6, opacity: 0.2 },
   },
@@ -124,8 +135,9 @@ export const variants: readonly Variant[] = [
     description: 'Vermelho de melancia com fogos de artifício em volta e a garra contornada de verde, como a casca.',
     facts: { volume: '473 ml', sugar: 'Sem açúcar' },
     tone: 'dark',
-    color: { can: '#F80D1A', glow: '#FF3B3B', ink: '#FF5A5F', deep: '#160504' },
+    color: { name: '#FFFFFF', can: '#F80D1A', glow: '#FF3B3B', ink: '#9DF58A', deep: '#160504' },
     tab: '#0A8E33',
+    ingredients: ['watermelon', 'ice'],
     rim: 6,
     particles: { ...still, speed: 0.003, direction: [0, 1], size: 0.9, opacity: 0.35 },
   },
@@ -137,14 +149,12 @@ export const variants: readonly Variant[] = [
     description: 'A lata do 46 de Valentino Rossi: amarelo inteiro, garra laranja e as cores do capacete na base.',
     facts: {},
     tone: 'dark',
-    color: { can: '#FBE404', glow: '#FBE404', ink: '#FBE404', deep: '#0D0A00' },
+    color: { name: '#FBE404', can: '#FBE404', glow: '#FBE404', ink: '#FBE404', deep: '#0D0A00' },
     tab: '#1A1A18',
+    ingredients: ['lemon', 'ice'],
     rim: 6,
     particles: { ...still, speed: 0.1, direction: [1, 0], stretch: 6, size: 1.6, opacity: 0.26 },
   },
 ];
 
 export const variantCount = variants.length;
-
-/** Cor da garra da marca: a abertura e a impressão da primeira lata usam ela. */
-export const CLAW_GREEN = '#A9F803';

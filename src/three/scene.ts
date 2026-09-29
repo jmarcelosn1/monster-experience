@@ -5,6 +5,7 @@ import { createLights } from './lights';
 import { parseCan, type Can, type LabelPair } from './can';
 import { createParticles } from './particles';
 import { createBackdrop } from './backdrop';
+import { createIngredients } from './ingredients';
 import type { Variant } from '../variants';
 
 // A cena não decide nada sozinha: o roteiro do scroll (story.ts) diz, a cada
@@ -20,12 +21,16 @@ export function createScene(canvas: HTMLCanvasElement, reduced: boolean) {
   const lights = createLights(stage.renderer, stage.scene);
   const particles = createParticles(window.innerWidth < 760 ? 140 : 340);
   const backdrop = createBackdrop();
-  stage.scene.add(backdrop.mesh, particles.points);
+  const ingredients = createIngredients();
+  stage.scene.add(backdrop.mesh, particles.points, ingredients.group);
 
   let can: Can | null = null;
 
-  /** O que o roteiro pode animar: giro e inclinação da apresentação, subida inicial. */
-  const motion = { spin: 0, tilt: 0, lift: 0, bgZoomA: 1.04, bgZoomB: 1.04 };
+  /**
+   * O que o roteiro pode animar: giro, inclinação para a frente (tilt) e para
+   * o lado (roll), deslocamento lateral (x, em metros) e subida inicial.
+   */
+  const motion = { spin: 0, tilt: 0, roll: 0, x: 0, lift: 0, bgZoomA: 1.04, bgZoomB: 1.04 };
   const pointer = { x: 0, y: 0 };
   const followX = gsap.quickTo(pointer, 'x', { duration: 1.2, ease: 'power3' });
   const followY = gsap.quickTo(pointer, 'y', { duration: 1.2, ease: 'power3' });
@@ -46,6 +51,7 @@ export function createScene(canvas: HTMLCanvasElement, reduced: boolean) {
     stage.pivot.add(can.root);
     stage.scene.add(can.shadow);
     stage.renderer.compile(stage.scene, stage.camera);
+    ingredients.warm(stage.renderer, stage.scene, stage.camera);
   }
 
   const projected = new THREE.Vector3();
@@ -60,8 +66,9 @@ export function createScene(canvas: HTMLCanvasElement, reduced: boolean) {
   const tabB = new THREE.Color();
 
   /**
-   * Onda de energia: progresso 0–1 sobe da base ao topo da tela. Abaixo dela
-   * aparecem o rótulo e o fundo B. Lata e fundo usam a mesma linha.
+   * Linha de troca: progresso 0–1 sobe da base ao topo da tela. Abaixo dela
+   * aparecem o rótulo e o fundo B. Lata e fundo usam a mesma linha; só a
+   * borda na lata tem um fio discreto de luz na cor `glow`.
    */
   function setWave(
     labelA: LabelPair | null,
@@ -73,9 +80,8 @@ export function createScene(canvas: HTMLCanvasElement, reduced: boolean) {
     seed: number,
   ) {
     const front = WAVE_FROM + (WAVE_TO - WAVE_FROM) * progress;
-    const moving = progress > 0 && progress < 1;
     glowColor.set(glow);
-    backdrop.set(bgA, bgB, front, moving ? 1 : 0, glowColor, seed);
+    backdrop.set(bgA, bgB, front, seed);
     if (!can) return;
     const bottom = screenY(can.body.min);
     const top = screenY(can.body.max);
@@ -102,7 +108,14 @@ export function createScene(canvas: HTMLCanvasElement, reduced: boolean) {
     const pivot = stage.pivot;
     pivot.rotation.y = motion.spin;
     pivot.rotation.x = motion.tilt;
+    pivot.rotation.z = motion.roll;
+    pivot.position.x = motion.x;
     pivot.position.y = motion.lift;
+    // os ingredientes acompanham a lata, com o mouse girando a nuvem de leve
+    ingredients.group.position.set(motion.x, motion.lift, 0);
+    ingredients.group.rotation.y = pointer.x * 0.18;
+    ingredients.group.rotation.x = pointer.y * 0.06;
+    ingredients.update(dt, time, !reduced);
     lights.follow(pointer.x, pointer.y);
     // o fundo anda um pouco com o mouse; a lata não
     backdrop.frame(motion.bgZoomA, motion.bgZoomB, -pointer.x * 0.008, pointer.y * 0.006);
@@ -116,6 +129,7 @@ export function createScene(canvas: HTMLCanvasElement, reduced: boolean) {
     stage,
     motion,
     particles,
+    ingredients,
     load,
     setWave,
     mixLook,

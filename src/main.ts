@@ -20,28 +20,27 @@ const one = <T extends Element>(selector: string) => {
   if (!el) throw new Error(`faltando no HTML: ${selector}`);
   return el;
 };
-const all = <T extends Element>(selector: string) => Array.from(document.querySelectorAll<T>(selector));
 
 // a página sempre abre do começo, e ninguém rola antes da abertura terminar
 history.scrollRestoration = 'manual';
 window.scrollTo(0, 0);
 
-// A garra começa a rasgar o preto antes de qualquer outra coisa. O three.js
-// chega em outro arquivo, em paralelo, e o preparo pesado do 3D (luz e shaders)
-// só roda depois do golpe, para não travar a animação.
+// A abertura começa antes de qualquer outra coisa. O three.js chega em outro
+// arquivo, em paralelo, e o preparo pesado do 3D (luz e shaders) só roda
+// depois da digitação, com a marca parada, para não travar a animação. A
+// abertura só sai quando a pessoa rola.
 const intro = createIntro(one('[data-intro]'), reduced);
 const threeModules = Promise.all([import('./three/scene'), import('./three/textures'), import('./three/videos')]);
-const loader = createLoader(one('[data-loader]'), one('[data-loader-value]'));
+const loader = createLoader(one('[data-loader]'), one('[data-loader-value]'), 5200);
 const modelFile = fetchAll(['/models/can.glb'], loader.update).then(([glb]) => glb.arrayBuffer());
 
 applyThemeMix(variants[0], variants[0], 0);
 
 const canvas = one<HTMLCanvasElement>('[data-canvas]');
 const stageEl = one<HTMLElement>('.stage');
-const beatsEl = one<HTMLElement>('[data-beats]');
 let story: Story | null = null;
 
-const catalog = createCatalog(one('[data-catalog]'), variants, { go: (i) => story?.goTo(i) }, reduced);
+const catalog = createCatalog(one('[data-catalog]'), reduced);
 const wheel = createWheel(
   one('[data-wheel]'),
   variants,
@@ -96,12 +95,12 @@ async function loadStage() {
     labels = createTextures(scene.stage.renderer, 10);
     backgrounds = createTextures(scene.stage.renderer, 4);
     videos = createVideos();
-    // só o modelo segura a abertura; rótulo e cena chegam enquanto ela acontece
+    // o modelo e o rótulo da Ultra seguram a saída (a lata nunca aparece sem
+    // tinta); a primeira cena chega depois, só é vista após a volta
     await scene.load(await modelFile);
     const first = variants[0];
-    void labels.load(`/labels/${first.id}.webp`, true);
-    void labels.load(`/labels/${first.id}-mask.webp`, false);
     void backgrounds.load(`/backgrounds/${first.id}.webp`, true);
+    await Promise.all([labels.load(`/labels/${first.id}.webp`, true), labels.load(`/labels/${first.id}-mask.webp`, false)]);
   } catch (err) {
     console.warn('3D indisponível; usando as fotos.', err);
     useFallback();
@@ -120,7 +119,7 @@ async function boot() {
     videos,
     catalog,
     wheel,
-    beats: all<HTMLElement>('[data-beat]'),
+    moves: Array.from(document.querySelectorAll<HTMLElement>('[data-move]')),
     fallback: showFallback,
     reduced,
     onCover: setCovered,
@@ -128,20 +127,31 @@ async function boot() {
   const run = story;
   gsap.ticker.add((time, deltaMs) => run.tick(time, deltaMs));
 
+  await intro.proceed;
   html.classList.remove('is-loading');
-  const tl = gsap.timeline({ onComplete: afterIntro });
-  const dive = intro.exit(tl, 0);
-  // a lata sobe do preto quando a câmera termina de atravessar a garra
-  gsap.set([canvas, beatsEl, one('.bar')], { opacity: 0 });
-  tl.to(canvas, { opacity: 1, duration: 1.4, ease: 'power2.out' }, dive - 0.25);
-  if (scene) tl.fromTo(scene.motion, { lift: -0.016 }, { lift: 0, duration: 1.8, ease: 'power3.out' }, dive - 0.25);
-  tl.to(beatsEl, { opacity: 1, duration: 0.8 }, dive + 0.5);
-  tl.to(one('.bar'), { opacity: 1, duration: 0.8 }, dive + 0.7);
+  // só um desvanecer: a lata já está parada no lugar final, com a garra
+  // impressa exatamente sob a garra da abertura; o preto sai em volta e a
+  // garra da abertura se desfaz sobre a dela. Por último, a navegação
+  const tl = gsap.timeline();
+  const fade = intro.exit(tl, 0);
+  const bar = one('.bar');
+  tl.fromTo(bar, { opacity: 0 }, { opacity: 1, duration: 0.6 }, fade - 0.3);
+  tl.call(afterIntro, [], fade + 0.2);
 }
 
 function afterIntro() {
   html.classList.remove('is-locked');
   wheel.load();
+  // a roda em 3D monta sete latas: fica para quando o navegador estiver livre
+  if (scene) {
+    const later = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 2000));
+    later(() => {
+      void Promise.all([import('./three/collection'), modelFile])
+        .then(([{ createCollection }, buffer]) => createCollection(one('[data-wheel-gl]'), buffer, variants, reduced))
+        .then((collection) => wheel.attach(collection))
+        .catch((err) => console.warn('roda em 3D indisponível; ficam as fotos.', err));
+    });
+  }
   // o resto chega comprimido enquanto a pessoa olha; decodificar fica para depois
   const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1200));
   idle(() => {

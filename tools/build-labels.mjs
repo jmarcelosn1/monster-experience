@@ -387,31 +387,29 @@ for (const cfg of PHOTOS) {
   await writeMask('origin', data, info.width, info.height, { inkMetal: 0.22, inkRough: 0.34, silverVal: [0.35, 0.8] });
   console.log('origin', info.width, 'x', info.height);
 
-  // foto da ORIGIN: primeiro quadro do vídeo 360, recortado pela silhueta
+  // foto da ORIGIN: primeiro quadro do vídeo 360, sobre fundo preto. A
+  // silhueta vai do topo da tampa ao fim da base: em cada linha, do primeiro
+  // ao último pixel acima do preto do fundo. Nada de filtrar pela largura do
+  // corpo (era isso que cortava tampa e base). Abaixo da base a lata se
+  // reflete na mesa: o recorte para na linha em que a borda salta para fora.
   const frame = await readRGBA('sources/origin-frame.png');
   const { data: fd, w, h } = frame;
-  const lit = (x, y) => luma(fd[(y * w + x) * 4], fd[(y * w + x) * 4 + 1], fd[(y * w + x) * 4 + 2]) > 30;
-  // fundo preto: primeiro e último pixel aceso na faixa central de cada linha
+  const BLACK = 8; // o fundo do vídeo fica entre 1 e 3
+  const lumAt = (x, y) => luma(fd[(y * w + x) * 4], fd[(y * w + x) * 4 + 1], fd[(y * w + x) * 4 + 2]);
   const rows = Array.from({ length: h }, (_, y) => {
     let l = -1;
     let r = -1;
-    for (let x = Math.round(w * 0.3); x < w * 0.7; x++) if (lit(x, y)) { l = x; break; }
-    for (let x = Math.round(w * 0.7); x > w * 0.3; x--) if (lit(x, y)) { r = x; break; }
-    return r - l > 20 ? [l, r] : [-1, -1];
+    for (let x = Math.round(w * 0.3); x < w * 0.7; x++) if (lumAt(x, y) > BLACK) { l = x; break; }
+    for (let x = Math.round(w * 0.7); x > w * 0.3; x--) if (lumAt(x, y) > BLACK) { r = x; break; }
+    return r - l > 4 ? [l, r] : [-1, -1];
   });
-  const widths = rows.filter(([l]) => l >= 0).map(([l, r]) => r - l);
-  const medianW = widths.sort((a, b) => a - b)[widths.length >> 1];
   const mid = Math.round(h / 2);
-  const inCan = (y) => rows[y][0] >= 0 && rows[y][1] - rows[y][0] > medianW * 0.75 && rows[y][1] - rows[y][0] < medianW * 1.06;
-  const extend = (y, step) => {
-    let last = y;
-    for (let k = y, miss = 0; k > 0 && k < h - 1 && miss < 8; k += step) {
-      if (inCan(k)) { last = k; miss = 0; } else miss++;
-    }
-    return last;
-  };
-  const top = extend(mid, -1);
-  const bottom = extend(mid, 1) + 1;
+  let top = mid;
+  while (top > 0 && rows[top - 1][0] >= 0) top--;
+  let last = mid;
+  const steady = (y) => rows[y + 1][0] >= 0 && Math.abs(rows[y + 1][0] - rows[y][0]) < 12 && Math.abs(rows[y + 1][1] - rows[y][1]) < 12;
+  while (last < h - 2 && steady(last)) last++;
+  const bottom = last + 1;
   let left = w;
   let right = 0;
   for (let y = top; y < bottom; y++) { left = Math.min(left, rows[y][0]); right = Math.max(right, rows[y][1]); }
@@ -427,7 +425,11 @@ for (const cfg of PHOTOS) {
       cut[di] = fd[si];
       cut[di + 1] = fd[si + 1];
       cut[di + 2] = fd[si + 2];
-      cut[di + 3] = l >= 0 && sx >= l && sx <= r ? 255 : 0;
+      // dentro da linha, opaco; no pixel da borda, a opacidade segue o brilho
+      // dele (é a borda suavizada da própria foto)
+      const inside = l >= 0 && sx >= l && sx <= r;
+      const edge = sx === l || sx === r;
+      cut[di + 3] = !inside ? 0 : edge ? Math.min(255, Math.round(lumAt(sx, top + y) * 6)) : 255;
     }
   }
   await sharp(cut, { raw: { width: cw, height: ch, channels: 4 } })

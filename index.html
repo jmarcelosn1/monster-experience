@@ -8,7 +8,7 @@
     <meta name="description" content="Estudo conceitual: uma lata, sete versões da linha Monster Energy." />
     <meta name="theme-color" content="#000000" />
     <link rel="icon" href="data:," />
-    <link rel="preload" href="/claw.webp" as="image" />
+    <link rel="preload" href="/claw-intro.webp" as="image" />
     <link rel="preload" href="/models/can.glb" as="fetch" crossorigin />
     <!-- Só a abertura: precisa estar pronta antes do CSS do app chegar -->
     <style>
@@ -26,43 +26,171 @@
         z-index: 20;
         display: grid;
         place-items: center;
-        background: #000;
         overflow: hidden;
       }
-      .intro__glow {
+      .intro__bg {
         position: absolute;
-        left: 50%;
-        top: 50%;
-        width: min(95vh, 950px);
-        aspect-ratio: 1;
-        translate: -50% -50%;
-        background: radial-gradient(closest-side, rgba(169, 248, 3, 0.2), transparent);
-        opacity: 0;
+        inset: 0;
+        background: radial-gradient(ellipse 60% 55% at 50% 46%, #080a08, #000);
+      }
+      .intro__light {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
         pointer-events: none;
+        mix-blend-mode: screen;
+      }
+      /* a garra fica exatamente onde a garra impressa da lata aparece na
+         primeira tela; o JS põe o retângulo medido (src/ui/intro-claw.json) */
+      .intro__mark {
+        position: absolute;
+        inset: 0;
+      }
+      .intro__claw {
+        position: absolute;
+        left: var(--claw-x);
+        top: var(--claw-y);
+        width: var(--claw-w);
+        height: var(--claw-h);
       }
       .intro__logo {
+        display: block;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        --reveal: -30%;
+        -webkit-mask-image: linear-gradient(100deg, #000 calc(var(--reveal) - 35%), transparent var(--reveal));
+        mask-image: linear-gradient(100deg, #000 calc(var(--reveal) - 35%), transparent var(--reveal));
+      }
+      /* a mesma garra com as cores do rótulo: é nela que a branca vira cinza */
+      .intro__tone {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+      }
+      .intro__word {
+        position: absolute;
+        left: var(--word-x);
+        top: var(--word-y);
+        translate: -50% 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.7em;
+        color: #f4f4f1;
+        font: 800 min(4.4vh, 44px) / 1 'Archivo Variable', 'Archivo', system-ui, sans-serif;
+        font-variation-settings: 'wdth' 125;
+        text-transform: uppercase;
+      }
+      /* as letras entram uma a uma (JS); até lá, nada aparece */
+      .intro__word > span {
+        display: block;
+        visibility: hidden;
+        letter-spacing: 0.16em;
+        margin-right: -0.16em;
+      }
+      .intro__word > span + span {
+        font-size: 0.34em;
+        font-weight: 600;
+        letter-spacing: 0.78em;
+        margin-right: -0.78em;
+        color: #a9f803;
+      }
+      .intro__word i {
         position: relative;
-        height: min(58vh, 560px);
-        width: auto;
-        aspect-ratio: 604 / 900;
-        overflow: visible;
+        font-style: normal;
       }
-      .intro__spark {
-        fill: none;
-        stroke: #d8ff6a;
-        stroke-width: 3;
-        stroke-linecap: round;
-        stroke-linejoin: round;
+      /* cada letra nasce acesa e assenta na cor dela */
+      .intro__word i.is-on {
+        visibility: visible;
+        animation: intro-lit 0.6s ease-out;
       }
-      .intro__spark--soft {
-        stroke: #a9f803;
-        stroke-width: 16;
-        opacity: 0.6;
+      @keyframes intro-lit {
+        from {
+          color: #fff;
+          text-shadow:
+            0 0 4px #fff,
+            0 0 18px rgba(236, 255, 214, 0.85);
+        }
+        to {
+          text-shadow: 0 0 0 rgba(236, 255, 214, 0);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .intro__word i.is-on {
+          animation: none;
+        }
+      }
+      .intro__caret {
+        position: absolute;
+        left: calc(100% + 0.08em);
+        top: 0.08em;
+        bottom: 0.08em;
+        width: 2px;
+        background: #a9f803;
+        visibility: visible;
+      }
+      /* o convite para rolar: a barrinha da digitação cai até aqui e vira um
+         fio; uma gota de luz desce por ele sem parar */
+      .intro__hint {
+        position: absolute;
+        left: 50%;
+        bottom: 5vh;
+        translate: -50% 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        visibility: hidden;
+      }
+      .intro__hint.is-on {
+        visibility: visible;
+      }
+      .intro__hint-line {
+        position: relative;
+        width: 2px;
+        height: 56px;
+        overflow: hidden;
+        background: #a9f803;
+        transition: background-color 0.8s;
+      }
+      .intro__hint.is-flowing .intro__hint-line {
+        background: rgba(169, 248, 3, 0.16);
+      }
+      .intro__hint.is-flowing .intro__hint-line::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(transparent, #a9f803 70%, transparent);
+        animation: intro-drop 2s cubic-bezier(0.6, 0, 0.3, 1) infinite;
+      }
+      @keyframes intro-drop {
+        from {
+          translate: 0 -100%;
+        }
+        to {
+          translate: 0 100%;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .intro__hint.is-flowing .intro__hint-line::after {
+          animation: none;
+        }
+      }
+      .intro__hint-text {
+        color: #7d8288;
+        font: 500 13px/1 'Archivo Variable', 'Archivo', system-ui, sans-serif;
+        letter-spacing: 0.04em;
+        opacity: 0;
       }
       .intro__count {
         position: absolute;
         left: 50%;
-        bottom: 36px;
+        top: 36px;
         translate: -50% 0;
         margin: 0;
         color: #5e636a;
@@ -79,18 +207,19 @@
   </head>
   <body>
     <div class="intro" data-intro aria-hidden="true">
-      <div class="intro__glow" data-intro-glow></div>
-      <svg class="intro__logo" data-logo viewBox="0 0 604 900">
-        <defs>
-          <clipPath id="claw-cut"><path data-cut d="M0 0" /></clipPath>
-          <filter id="spark-blur" x="-20%" y="-50%" width="140%" height="200%">
-            <feGaussianBlur stdDeviation="6" />
-          </filter>
-        </defs>
-        <image href="/claw.webp" width="604" height="900" clip-path="url(#claw-cut)" />
-        <path class="intro__spark intro__spark--soft" data-spark-soft d="" filter="url(#spark-blur)" />
-        <path class="intro__spark" data-spark d="" />
-      </svg>
+      <div class="intro__bg" data-intro-bg></div>
+      <div class="intro__mark" data-intro-mark>
+        <div class="intro__claw" data-intro-claw>
+          <img class="intro__logo" data-logo src="/claw-intro.webp" width="597" height="1000" alt="" decoding="async" />
+          <img class="intro__tone" data-intro-tone src="/claw-intro-color.webp" width="597" height="1000" alt="" decoding="async" />
+        </div>
+        <p class="intro__word" data-intro-word><span>Monster</span><span>Energy</span></p>
+      </div>
+      <canvas class="intro__light" data-intro-light></canvas>
+      <div class="intro__hint" data-intro-hint>
+        <span class="intro__hint-line" data-intro-hint-line></span>
+        <span class="intro__hint-text" data-intro-hint-text>Unleash the Beast</span>
+      </div>
       <p class="intro__count" data-loader><span data-loader-value>0</span>%</p>
     </div>
 
@@ -104,26 +233,25 @@
       <p class="bar__brand">Monster Energy</p>
     </header>
 
-    <div class="beats" data-beats aria-hidden="true">
-      <div class="beat" data-beat>
-        <p>Toda lata começa em alumínio.</p>
-        <p>Role para imprimir o rótulo.</p>
+    <div class="moves" aria-hidden="true">
+      <div class="move move--left" data-move>
+        <p>Sabor completo.</p>
+        <p>Zero açúcar.</p>
       </div>
-      <div class="beat" data-beat>
-        <p>Sete versões, uma lata só.</p>
-        <p>Esta é a Ultra, a primeira da fila.</p>
+      <div class="move move--right" data-move>
+        <p>Libere o seu Monster.</p>
+        <p>Monster Energy Ultra, 473 ml.</p>
       </div>
     </div>
 
     <section class="catalog" data-catalog aria-labelledby="product">
-      <nav class="catalog__index" aria-label="Produtos">
-        <ol data-index></ol>
-      </nav>
       <div class="catalog__info">
         <h1 class="catalog__name" id="product" data-name></h1>
-        <p class="catalog__caption"><span data-caption></span><span data-caption></span></p>
       </div>
-      <p class="catalog__facts" data-facts></p>
+      <div class="catalog__side" data-side>
+        <p class="catalog__caption"><span data-caption></span><span data-caption></span></p>
+        <p class="catalog__facts" data-facts></p>
+      </div>
       <p class="sr-only" aria-live="polite" data-announce></p>
     </section>
 
@@ -132,6 +260,7 @@
     <div class="journey" data-journey-layer>
       <section class="wheel" data-wheel aria-labelledby="collection-title">
         <div class="wheel__glow"></div>
+        <canvas class="wheel__gl" data-wheel-gl></canvas>
         <div class="wheel__stage">
           <div class="wheel__drum" data-wheel-drum></div>
         </div>

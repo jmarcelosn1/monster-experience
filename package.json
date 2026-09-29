@@ -7,7 +7,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "assets": "node tools/optimize-glb.mjs && node tools/build-labels.mjs && node tools/build-backgrounds.mjs"
+    "assets": "node tools/optimize-glb.mjs && node tools/build-labels.mjs && node tools/build-backgrounds.mjs && node tools/build-intro-claw.mjs"
   },
   "dependencies": {
     "@fontsource-variable/archivo": "^5.3.0",

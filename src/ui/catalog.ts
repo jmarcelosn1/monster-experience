@@ -1,42 +1,46 @@
 import gsap from 'gsap';
 import type { Variant } from '../variants';
 
-// A interface do catálogo: o índice 01–07 (é uma sequência de scroll de
-// verdade), o nome do produto, a legenda e o que está impresso na lata. Quando
-// a versão troca, o nome entra esticando pelo eixo de largura da fonte.
+// A interface do catálogo, dos dois lados da lata: o nome do produto em letra
+// grande à esquerda, na cor escolhida para destacar sobre a cena de cada
+// versão, e à direita a legenda com o que está impresso na lata, que chega no
+// scroll seguinte. Sem lista nem números: a ordem é a do scroll (e das
+// setas). Quando a versão troca, o nome entra esticando pelo eixo de largura
+// da fonte.
 
-const pad = (n: number) => String(n).padStart(2, '0');
+const WDTH = 78;
 
-interface Handlers {
-  go(index: number): void;
-}
-
-export function createCatalog(root: HTMLElement, variants: readonly Variant[], handlers: Handlers, reduced: boolean) {
-  const list = root.querySelector<HTMLElement>('[data-index]')!;
+export function createCatalog(root: HTMLElement, reduced: boolean) {
   const name = root.querySelector<HTMLElement>('[data-name]')!;
   const lines = Array.from(root.querySelectorAll<HTMLElement>('[data-caption]'));
   const facts = root.querySelector<HTMLElement>('[data-facts]')!;
+  const side = root.querySelector<HTMLElement>('[data-side]')!;
   const announce = root.querySelector<HTMLElement>('[data-announce]')!;
 
-  const buttons = variants.map((v, i) => {
-    const item = document.createElement('li');
-    const button = document.createElement('button');
-    button.type = 'button';
-    const n = document.createElement('span');
-    n.className = 'n';
-    n.textContent = pad(i + 1);
-    const w = document.createElement('span');
-    w.className = 'w';
-    w.textContent = v.name;
-    button.append(n, w);
-    button.addEventListener('click', () => handlers.go(i));
-    item.append(button);
-    list.append(item);
-    return button;
-  });
+  /**
+   * Palavra não quebra: se a mais longa ("Absolutely", "Watermelon") passar
+   * do espaço à esquerda da lata, o nome inteiro diminui só o necessário.
+   */
+  function fit() {
+    name.style.fontSize = '';
+    gsap.set(name, { '--wdth': WDTH });
+    const room = name.parentElement!.clientWidth;
+    const widest = Math.max(...Array.from(name.children, (w) => (w as HTMLElement).offsetWidth));
+    if (widest > room) name.style.fontSize = `${(parseFloat(getComputedStyle(name).fontSize) * room) / widest}px`;
+  }
 
   function fill(v: Variant) {
-    name.textContent = v.name;
+    // uma palavra por linha: "Ultra / Paradise", "The / Doctor"
+    name.replaceChildren(
+      ...v.name.split(' ').map((word) => {
+        const line = document.createElement('span');
+        line.textContent = word;
+        return line;
+      }),
+    );
+    name.setAttribute('aria-label', v.name);
+    name.style.color = v.color.name;
+    fit();
     lines[0].textContent = v.caption[0];
     lines[1].textContent = v.caption[1];
     facts.replaceChildren(
@@ -48,33 +52,37 @@ export function createCatalog(root: HTMLElement, variants: readonly Variant[], h
     );
   }
 
-  /** Mostra o produto `i`. `dir` diz se o scroll está descendo (1) ou subindo (-1). */
-  function show(i: number, dir: number, immediate: boolean) {
-    const v = variants[i];
-    buttons.forEach((b, k) => b.setAttribute('aria-current', String(k === i)));
-    announce.textContent = `${pad(i + 1)}. ${v.product}.`;
-    gsap.killTweensOf([name, ...lines, facts]);
+  /** Mostra a versão `v`. `dir` diz se o scroll está descendo (1) ou subindo (-1). */
+  function show(v: Variant, dir: number, immediate: boolean) {
+    announce.textContent = `${v.product}. ${v.caption.join(' ')}`;
+    gsap.killTweensOf(name);
     if (immediate || reduced) {
       fill(v);
-      gsap.set([name, ...lines, facts], { opacity: 1, y: 0, '--wdth': 112 });
+      gsap.set(name, { opacity: 1, y: 0, '--wdth': WDTH });
       return;
     }
     gsap
       .timeline()
-      .to([name, ...lines, facts], { opacity: 0, y: -10 * dir, duration: 0.16, ease: 'power2.in' })
+      .to(name, { opacity: 0, y: -10 * dir, duration: 0.16, ease: 'power2.in' })
       .call(() => fill(v))
       .fromTo(
         name,
-        { opacity: 0, y: 16 * dir, '--wdth': 62 },
-        { opacity: 1, y: 0, '--wdth': 112, duration: 0.7, ease: 'expo.out' },
-      )
-      .fromTo(
-        [...lines, facts],
-        { opacity: 0, y: 10 * dir },
-        { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out', stagger: 0.05 },
-        '<0.08',
+        { opacity: 0, y: 20 * dir, '--wdth': 62 },
+        { opacity: 1, y: 0, '--wdth': WDTH, duration: 0.8, ease: 'expo.out' },
       );
   }
+
+  /** Legenda do outro lado da lata: 0 = fora, 1 = no lugar. Segue o scroll. */
+  let sideShown = -1;
+  function setCaption(p: number) {
+    const rounded = Math.round(p * 100) / 100;
+    if (rounded === sideShown) return;
+    sideShown = rounded;
+    side.style.opacity = String(rounded);
+    side.style.translate = `${reduced ? 0 : ((1 - rounded) * 24).toFixed(1)}px -50%`;
+  }
+
+  window.addEventListener('resize', fit);
 
   let visible = -1;
   function setOpacity(o: number) {
@@ -83,10 +91,9 @@ export function createCatalog(root: HTMLElement, variants: readonly Variant[], h
     visible = rounded;
     root.style.opacity = String(rounded);
     root.style.visibility = rounded <= 0 ? 'hidden' : 'visible';
-    root.inert = rounded < 0.5;
   }
 
-  return { show, setOpacity };
+  return { show, setOpacity, setCaption };
 }
 
 export type Catalog = ReturnType<typeof createCatalog>;

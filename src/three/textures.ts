@@ -15,7 +15,7 @@ export function createTextures(renderer: THREE.WebGLRenderer, maxResident: numbe
   const entries = new Map<string, Entry>();
   const recent: string[] = [];
   let pinned = new Set<string>();
-  const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  const anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy());
 
   function prefetch(url: string) {
     let blob = blobs.get(url);

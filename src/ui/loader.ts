@@ -1,12 +1,18 @@
-// Contador pequeno, com porcentagem real (bytes baixados). Se tudo chegar em
-// menos de 0,4 s, ele nem aparece.
+// Contador pequeno, com porcentagem real (bytes baixados). Só aparece se a
+// carga passar de `delay` ms e ainda faltar baixar; antes disso a abertura
+// ocupa a tela sozinha, e com tudo baixado não há o que contar.
 
-export function createLoader(el: HTMLElement, value: HTMLElement) {
-  const timer = window.setTimeout(() => el.classList.add('is-visible'), 400);
+export function createLoader(el: HTMLElement, value: HTMLElement, delay = 400) {
+  let complete = false;
+  const timer = window.setTimeout(() => {
+    if (!complete) el.classList.add('is-visible');
+  }, delay);
 
   return {
     update(progress: number) {
       value.textContent = String(Math.round(Math.min(1, progress) * 100));
+      complete = progress >= 1;
+      if (complete) el.classList.remove('is-visible');
     },
     done() {
       window.clearTimeout(timer);

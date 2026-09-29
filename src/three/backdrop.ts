@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 
 // O fundo de cena desenhado no mesmo canvas da lata, atrás dela. Recebe duas
-// imagens (A e B) e a mesma onda de energia da lata: abaixo da frente aparece
-// B, e a borda brilha na cor da versão nova. Assim a lata e o mundo trocam
-// juntos, numa linha só. Sem tone mapping: a imagem sai com as cores dela.
+// imagens (A e B) e a mesma linha de troca da lata: abaixo da frente aparece
+// B. A linha não brilha: nada atravessa a tela, só a imagem muda, com a
+// emenda macia. Sem tone mapping: a imagem sai com as cores dela.
 
 const vertexShader = /* glsl */ `
 varying vec2 vUv;
@@ -21,8 +21,6 @@ uniform float uZoomA;
 uniform float uZoomB;
 uniform vec2 uShift;
 uniform float uFront;
-uniform float uBand;
-uniform vec3 uGlow;
 uniform float uSeed;
 varying vec2 vUv;
 
@@ -47,9 +45,8 @@ void main() {
   vec3 b = texture2D(uB, fit(vUv, uZoomB)).rgb;
   float n = noise(vUv * vec2(9.0, 3.0) + uSeed) * 0.65 + noise(vUv * vec2(34.0, 12.0) + uSeed) * 0.35;
   float edge = vUv.y + (n - 0.5) * 0.07 - uFront;
-  float reveal = 1.0 - smoothstep(-0.003, 0.003, edge);
-  float band = (1.0 - smoothstep(0.0, 0.028, abs(edge))) * uBand;
-  gl_FragColor = vec4(mix(a, b, reveal) + uGlow * band, 1.0);
+  float reveal = 1.0 - smoothstep(-0.012, 0.012, edge);
+  gl_FragColor = vec4(mix(a, b, reveal), 1.0);
   #include <colorspace_fragment>
 }
 `;
@@ -73,8 +70,6 @@ export function createBackdrop() {
     uZoomB: { value: 1.04 },
     uShift: { value: new THREE.Vector2() },
     uFront: { value: -1 },
-    uBand: { value: 0 },
-    uGlow: { value: new THREE.Color() },
     uSeed: { value: 0 },
   };
   const mesh = new THREE.Mesh(
@@ -90,15 +85,13 @@ export function createBackdrop() {
   }
 
   /**
-   * a/b: imagens (null = preto). front: altura da onda na tela (0 = base,
-   * 1 = topo). band: 1 enquanto a onda passa.
+   * a/b: imagens (null = preto). front: altura da linha na tela (0 = base,
+   * 1 = topo).
    */
-  function set(a: THREE.Texture | null, b: THREE.Texture | null, front: number, band: number, glow: THREE.Color, seed: number) {
+  function set(a: THREE.Texture | null, b: THREE.Texture | null, front: number, seed: number) {
     uniforms.uA.value = a ?? black;
     uniforms.uB.value = b ?? black;
     uniforms.uFront.value = front;
-    uniforms.uBand.value = band;
-    uniforms.uGlow.value.copy(glow);
     uniforms.uSeed.value = seed;
   }
 

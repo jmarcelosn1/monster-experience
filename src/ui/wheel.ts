@@ -1,5 +1,6 @@
 import gsap from 'gsap';
 import type { Variant } from '../variants';
+import type { Collection, WheelItem } from '../three/collection';
 
 // A descrição dos produtos como uma roda (a partir do works-wheel), só com as
 // latas recortadas. Em repouso, as sete formam um anel em volta do título, como
@@ -84,9 +85,7 @@ export function createWheel(root: HTMLElement, variants: readonly Variant[], han
     const item = document.createElement('li');
     const button = document.createElement('button');
     button.type = 'button';
-    const num = document.createElement('span');
-    num.textContent = String(i + 1).padStart(2, '0');
-    button.append(num, ` ${v.name}`);
+    button.textContent = v.name;
     button.addEventListener('click', () => handlers.seek(i));
     item.append(button);
     index.append(item);
@@ -98,10 +97,22 @@ export function createWheel(root: HTMLElement, variants: readonly Variant[], han
     variants.forEach((v, i) => (cards[i].can.src = `/posters/${v.id}.webp`));
   }
 
+  // as latas em 3D (three/collection.ts), quando chegarem; até lá, as fotos
+  let view: Collection | null = null;
+  const items: WheelItem[] = variants.map(() => ({ mix: 0, offset: 0, ringDeg: 0, drumDeg: 0, scale: 1, visible: true }));
+
+  /** Passa a desenhar as latas em 3D; as fotos ficam só como área de clique. */
+  function attach(collection: Collection) {
+    view = collection;
+    view.resize(root.clientWidth, root.clientHeight);
+    root.classList.add('is-3d');
+  }
+
   let geo = { canH: 0, drumR: 0, ringR: 0, ringScale: 1, bow: 0 };
   function measure() {
     const w = root.clientWidth;
     const h = root.clientHeight;
+    view?.resize(w, h);
     const canH = Math.min(h * CAN_H, (w * CAN_MAX_W) / CAN_RATIO);
     geo = {
       canH,
@@ -179,6 +190,13 @@ export function createWheel(root: HTMLElement, variants: readonly Variant[], han
       card.style.visibility = opacity < 0.01 ? 'hidden' : '';
       card.style.zIndex = String(Math.round(100 - Math.abs(d) * 2));
       can.style.transform = `scale(${lerp(geo.ringScale, 1, mi).toFixed(4)})`;
+      const it = items[i];
+      it.mix = mi;
+      it.offset = d;
+      it.ringDeg = i * (360 / n) + drift;
+      it.drumDeg = d * STEP;
+      it.scale = lerp(geo.ringScale, 1, mi);
+      it.visible = opacity >= 0.01;
     }
     label.style.opacity = String(1 - smooth(m / 0.4));
     const panel = smooth((m - 0.6) / 0.4);
@@ -186,11 +204,13 @@ export function createWheel(root: HTMLElement, variants: readonly Variant[], han
     titleBox.style.pointerEvents = panel > 0.6 ? 'auto' : 'none';
     index.style.opacity = String(smooth((m - 0.5) / 0.5));
     setActive(clamp(Math.round(pos), 0, n - 1));
+    view?.render(items, { ...geo, depth: geo.canH * LENS }, m, active, dt, performance.now() / 1000);
   }
 
   measure();
   return {
     load,
+    attach,
     measure,
     setTarget,
     frame,

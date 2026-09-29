@@ -22,9 +22,16 @@
   box-sizing: border-box;
 }
 
+/* sem barra de rolagem à vista: o site inteiro é o scroll; rodinha, trackpad
+   e teclado continuam funcionando */
 html {
   background: #000;
   color: var(--fg);
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
 }
 
 body {
@@ -134,38 +141,49 @@ button {
   --shade: transparent;
 }
 
-/* ---------------------------------------------------------------- apresentação */
+/* ---------------------------------------------------------------- travessia */
 
-.beats {
+/* os textos da apresentação, do lado oposto ao da lata; o que está escrito
+   vem do próprio rótulo da Ultra */
+.moves {
   position: fixed;
-  left: var(--gutter);
-  top: 50%;
+  inset: 0;
   z-index: 2;
-  display: grid;
-  translate: 0 -50%;
-  color: #f4f4f1;
   pointer-events: none;
+  color: #f4f4f1;
 }
 
-.beat {
-  grid-area: 1 / 1;
+.move {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  max-width: min(40vw, 640px);
   opacity: 0;
 }
 
-.beat p:first-child {
-  max-width: 11ch;
-  font-size: clamp(28px, 2.6vw, 44px);
-  font-weight: 700;
-  font-variation-settings: 'wdth' 112;
-  line-height: 1.05;
-  letter-spacing: -0.015em;
+.move--left {
+  left: var(--gutter);
 }
 
-.beat p + p {
-  max-width: 26ch;
-  margin-top: 16px;
-  font-size: 17px;
-  color: #8b9096;
+.move--right {
+  right: var(--gutter);
+  text-align: right;
+}
+
+.move p:first-child {
+  font-size: clamp(48px, min(6.4vw, 12vh), 120px);
+  font-weight: 800;
+  font-variation-settings: 'wdth' 78;
+  line-height: 0.88;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.move p + p {
+  margin-top: 18px;
+  font-size: clamp(17px, 1.3vw, 22px);
+  font-weight: 500;
+  color: #9ba0a6;
 }
 
 /* ---------------------------------------------------------------- catálogo */
@@ -183,79 +201,60 @@ button {
     0 0 18px var(--shade);
 }
 
-.catalog__index,
-.catalog__info,
-.catalog__facts {
-  pointer-events: auto;
-}
-
-.catalog__index {
+/* o nome é o destaque da tela: grande, condensado, na cor da versão (color.name
+   vem de variants.ts), à esquerda da lata sem encostar nela */
+.catalog__info {
   position: absolute;
   left: var(--gutter);
   top: 50%;
   translate: 0 -50%;
-}
-
-.catalog__index ol {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.catalog__index button {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  min-height: 34px;
-  padding: 5px 0;
-  color: var(--faint);
-  transition:
-    color 0.4s var(--ease-out),
-    translate 0.5s var(--ease-out);
-}
-
-.catalog__index .n {
-  font-size: 12px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.catalog__index .w {
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.catalog__index button:hover {
-  color: var(--fg);
-}
-
-.catalog__index button[aria-current='true'] {
-  color: var(--ink);
-  translate: 10px 0;
-}
-
-.catalog__info {
-  position: absolute;
-  left: var(--gutter);
-  bottom: var(--gutter);
-  max-width: min(34vw, 480px);
+  /* a lata tem uns 25vh de largura: sobra um respiro de 40px até ela */
+  width: calc(50vw - var(--gutter) - 12.5vh - 40px);
 }
 
 .catalog__name {
-  --wdth: 112;
-  font-size: clamp(40px, 4.2vw, 72px);
+  --wdth: 78;
+  font-size: clamp(56px, min(8vw, 15vh), 152px);
   font-weight: 800;
   font-variation-settings: 'wdth' var(--wdth);
-  line-height: 0.92;
-  letter-spacing: -0.02em;
-  color: var(--fg);
+  line-height: 0.86;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  /* a sombra segue o desenho das letras e cresce com elas (em): uma borda
+     curta que recorta a letra do fundo e um halo largo e fraco em volta */
+  text-shadow:
+    0 0.01em 0.03em var(--shade),
+    0 0.02em 0.22em var(--shade);
 }
 
+.catalog__name span {
+  display: block;
+  width: max-content;
+}
+
+/* a legenda, do outro lado da lata, com o mesmo respiro até ela */
+.catalog__side {
+  position: absolute;
+  left: calc(50vw + 12.5vh + 40px);
+  top: 50%;
+  translate: 24px -50%;
+  width: calc(50vw - var(--gutter) - 12.5vh - 40px);
+  opacity: 0;
+}
+
+/* a primeira frase é o subtítulo do nome: grande o bastante para conversar
+   com ele do outro lado da lata; a segunda, menor, completa */
 .catalog__caption {
-  margin-top: 18px;
-  font-size: clamp(17px, 1.3vw, 21px);
-  font-weight: 500;
-  line-height: 1.3;
+  font-size: clamp(24px, 2.3vw, 40px);
+  font-weight: 700;
+  font-variation-settings: 'wdth' 100;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  color: var(--fg);
+  text-wrap: balance;
+  text-shadow:
+    0 0.02em 0.05em var(--shade),
+    0 0.03em 0.4em var(--shade);
 }
 
 .catalog__caption span {
@@ -263,16 +262,18 @@ button {
 }
 
 .catalog__caption span + span {
+  margin-top: 0.6em;
+  font-size: 0.55em;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0;
   color: var(--muted);
 }
 
 .catalog__facts {
-  position: absolute;
-  right: var(--gutter);
-  bottom: var(--gutter);
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  margin-top: 26px;
   font-size: 15px;
   font-weight: 600;
   line-height: 1.5;
@@ -339,6 +340,20 @@ button {
   background:
     radial-gradient(46% 56% at 50% 50%, color-mix(in oklab, var(--wheel-glow) 16%, transparent), transparent 72%),
     linear-gradient(var(--wheel-deep), #050505);
+}
+
+/* as latas em 3D, atrás dos botões da roda */
+.wheel__gl {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* com o 3D pronto, as fotos viram só a área de clique de cada lata */
+.wheel.is-3d .wheel__can {
+  opacity: 0;
 }
 
 .wheel__stage {
@@ -464,13 +479,6 @@ button {
   transition: color 0.4s var(--ease-out);
 }
 
-.wheel__index button span {
-  margin-right: 10px;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  color: #50555b;
-}
-
 .wheel__index button:hover,
 .wheel__index button[aria-current='true'] {
   color: var(--wheel-glow);
@@ -488,7 +496,6 @@ button {
 /* ---------------------------------------------------------------- telas estreitas (sem otimização dedicada) */
 
 @media (max-width: 760px) {
-  .catalog__index,
   .wheel__index {
     display: none;
   }
@@ -498,7 +505,7 @@ button {
     max-width: calc(100vw - 2 * var(--gutter));
   }
 
-  .catalog__facts {
+  .catalog__side {
     display: none;
   }
 }
