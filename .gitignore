@@ -1,2 +1,7 @@
 node_modules
 dist
+
+# segredos locais nunca vão para o GitHub
+.env
+.env.*
+!.env.example
