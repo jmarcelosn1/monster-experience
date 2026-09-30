@@ -20,8 +20,8 @@ const STEP = 40; // graus entre latas no tambor
 const DRUM = 1.55; // raio do tambor, em alturas de lata
 const LENS = 2.6; // distância da perspectiva, em alturas de lata
 const BOW = 0.9; // o tambor curva para a esquerda: a da frente fica no centro
-const RING_R = 0.3; // raio do anel, fração do palco (até o centro de cada lata)
-const RING_CAN = 0.24; // altura de cada lata no anel, fração do palco
+export const RING_R = 0.3; // raio do anel, fração do palco (até o centro de cada lata)
+export const RING_CAN = 0.24; // altura de cada lata no anel, fração do palco
 const CULL = 1.6; // vizinhas além disso já estão de lado
 const CASCADE = 0.35; // atraso máximo da cascata na passagem anel → tambor
 const SMOOTH = 6.5; // por segundo; maior = segue o scroll mais de perto
@@ -165,13 +165,16 @@ export function createWheel(root: HTMLElement, variants: readonly Variant[], han
     target = clamp(value, 0, n);
   }
 
-  function frame(dt: number) {
+  /** `still`: o anel para de girar sozinho e volta à posição inicial. */
+  function frame(dt: number, still = false) {
     const k = reduced ? 1 : 1 - Math.exp(-dt * SMOOTH);
     turn += (target - turn) * k;
     if (Math.abs(target - turn) < 0.0002) turn = target;
     m = clamp(turn, 0, 1);
     const pos = Math.max(0, turn - 1);
-    if (!reduced) drift = (drift + dt * RING_DRIFT * (1 - m)) % 360;
+    if (still) drift = drift > 180 ? drift + (360 - drift) * Math.min(1, dt * 8) : drift * Math.max(0, 1 - dt * 8);
+    else if (!reduced) drift = (drift + dt * RING_DRIFT * (1 - m)) % 360;
+    if (still && (drift < 0.05 || drift > 359.95)) drift = 0;
 
     // o tambor recua para a lata da frente cair no plano da tela
     drum.style.transform = `translateZ(${(-m * geo.drumR).toFixed(2)}px)`;

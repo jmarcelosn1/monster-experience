@@ -50,8 +50,10 @@ export function createScene(canvas: HTMLCanvasElement, reduced: boolean) {
     can = await parseCan(buffer);
     stage.pivot.add(can.root);
     stage.scene.add(can.shadow);
-    stage.renderer.compile(stage.scene, stage.camera);
-    ingredients.warm(stage.renderer, stage.scene, stage.camera);
+    // compilação em paralelo (quando o navegador deixa): a digitação da
+    // abertura continua correndo enquanto os shaders ficam prontos
+    await stage.renderer.compileAsync(stage.scene, stage.camera);
+    await ingredients.warm(stage.renderer, stage.scene, stage.camera);
   }
 
   const projected = new THREE.Vector3();

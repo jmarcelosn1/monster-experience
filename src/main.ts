@@ -26,9 +26,10 @@ history.scrollRestoration = 'manual';
 window.scrollTo(0, 0);
 
 // A abertura começa antes de qualquer outra coisa. O three.js chega em outro
-// arquivo, em paralelo, e o preparo pesado do 3D (luz e shaders) só roda
-// depois da digitação, com a marca parada, para não travar a animação. A
-// abertura só sai quando a pessoa rola.
+// arquivo, em paralelo, e o preparo do 3D (luz e shaders) começa assim que o
+// feixe passa e a garra fica parada, com os shaders compilando em paralelo,
+// para a lata já estar pronta quando a pessoa rolar. A abertura só sai
+// quando a pessoa rola.
 const intro = createIntro(one('[data-intro]'), reduced);
 const threeModules = Promise.all([import('./three/scene'), import('./three/textures'), import('./three/videos')]);
 const loader = createLoader(one('[data-loader]'), one('[data-loader-value]'), 5200);
@@ -88,7 +89,7 @@ function setCovered(covered: boolean) {
 // ---------------------------------------------------------------- abertura
 
 async function loadStage() {
-  await intro.revealed;
+  await intro.still;
   try {
     const [{ createScene }, { createTextures }, { createVideos }] = await threeModules;
     scene = createScene(canvas, reduced);

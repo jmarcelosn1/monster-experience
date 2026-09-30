@@ -3,6 +3,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { variants, type Variant } from './variants';
 import { applyThemeMix } from './theme';
 import { createRip } from './ui/rip';
+import { RING_CAN, RING_R } from './ui/wheel';
+import { HERO_SHOT } from './three/stage';
 import type { Scene } from './three/scene';
 import type { Textures } from './three/textures';
 import type { Videos } from './three/videos';
@@ -17,10 +19,12 @@ import type { Wheel } from './ui/wheel';
 //                 texto entra à esquerda), atravessa para a esquerda
 //                 completando a volta (texto à direita) e volta ao centro;
 //                 gelo e limão em 3D saem de perto dela e flutuam em volta.
-//                 Depois a primeira cena aparece por trás
-//   catálogo      01 → 07: cada versão fica parada meia tela e a onda leva à
-//                 próxima, trocando lata e fundo na mesma linha
-//   descrição     o rasgo de três garras abre para a roda dos produtos
+//   coleção       a Ultra recua até o lugar dela no anel da coleção (o topo)
+//                 e as outras seis aparecem em volta; depois o anel se abre
+//                 no tambor, produto a produto
+//   catálogo      o rasgo de três garras corta a coleção e abre para as
+//                 versões com cor e fundo: cada uma fica parada e a onda leva
+//                 à próxima, trocando lata e fundo na mesma linha
 //
 // Nada disso depende de tempo: parar o scroll para tudo, voltar desfaz.
 
@@ -31,20 +35,28 @@ const MOVE_A = [0, 1] as const; // centro → direita, meia volta
 const MOVE_B = [1.1, 2.1] as const; // direita → esquerda, a outra meia volta
 const MOVE_C = [2.2, 2.7] as const; // esquerda → centro
 const SIDE = 0.085; // metros do centro nas pontas da travessia
-const REVEAL = [2.6, 3.05] as const;
-const C0 = 3.05; // começo do catálogo
+const BACK = [MOVE_C[1] + 0.05, MOVE_C[1] + 0.75] as const; // a Ultra recua até o anel
+const JOIN = [BACK[1] - 0.1, BACK[1] + 0.25] as const; // a coleção aparece em volta dela
+const RING_AT = JOIN[1] + 0.05; // parada no anel
+const RING_END = RING_AT + 0.15;
+const OPEN_END = RING_END + 0.6;
+const ITEM = 0.55;
+const W_END = OPEN_END + (n - 1) * ITEM + 0.45; // fim da roda
+const RIP0 = W_END;
+const RIP_TEAR = RIP0 + 0.8;
+const RIP_END = RIP0 + 1.3;
+const C0 = RIP_END; // o catálogo começa com o rasgo aberto
+// A câmera do palco (24° de campo) na distância em que a lata fica do tamanho
+// das latas do anel, e o quanto ela desce para a lata subir até o topo dele.
+const VIEW = 2 * Math.tan((12 * Math.PI) / 180); // altura visível por metro de distância
+const RING_Z = 0.168 / (RING_CAN * VIEW);
+const RING_DROP = RING_R * RING_Z * VIEW;
 const SEG = 1.5; // uma versão a cada tela e meia
 const TITLE_AT = 0.2; // parada do nome, em telas desde o começo da versão
 const CAPTION_AT = 0.7; // parada da legenda, do outro lado da lata
 const HOLD = 1 / SEG; // até aqui a versão fica parada; depois, a troca
 const C_END = C0 + (n - 1) * SEG + HOLD * SEG;
-const RIP0 = C_END + 0.1;
-const RIP_TEAR = RIP0 + 0.8;
-const RIP_END = RIP0 + 1.3;
-const RING_END = RIP0 + 1.8;
-const OPEN_END = RIP0 + 2.4;
-const ITEM = 0.55;
-const END = OPEN_END + (n - 1) * ITEM + 0.45;
+const END = C_END;
 
 const SMOOTHING = 9; // por segundo: a rodinha do mouse anda em degraus, a cena não
 
@@ -75,8 +87,12 @@ export function createStory(deps: Deps) {
 
   const spacer = document.querySelector<HTMLElement>('[data-story]')!;
   const layer = document.querySelector<HTMLElement>('[data-journey-layer]')!;
+  const stageEl = document.querySelector<HTMLElement>('.stage')!;
+  // a coleção aparece e some por opacidade; quem o rasgo recorta é o palco,
+  // que passa para a frente dela quando as garras começam a cortar
+  layer.style.clipPath = 'none';
   const rip = createRip(
-    layer,
+    stageEl,
     document.querySelector<SVGPathElement>('[data-rip-edge]')!,
     document.querySelector<SVGPathElement>('[data-rip-soft]')!,
   );
@@ -90,14 +106,14 @@ export function createStory(deps: Deps) {
   size();
 
   // Sempre para num ponto de leitura: a lata parada, os dois lados da
-  // travessia, cada versão, anel, cada produto.
+  // travessia, anel, cada produto da roda, cada versão do catálogo.
   const stops = [
     0,
     MOVE_A[1] + 0.05,
     MOVE_B[1] + 0.05,
-    ...variants.flatMap((_, i) => [C0 + i * SEG + TITLE_AT, C0 + i * SEG + CAPTION_AT]),
-    RIP0 + 1.55,
+    RING_AT,
     ...variants.map((_, i) => OPEN_END + i * ITEM),
+    ...variants.flatMap((_, i) => [C0 + i * SEG + TITLE_AT, C0 + i * SEG + CAPTION_AT]),
     END,
   ];
   ScrollTrigger.create({
@@ -136,7 +152,6 @@ export function createStory(deps: Deps) {
     const ma = smooth((s - MOVE_A[0]) / (MOVE_A[1] - MOVE_A[0]));
     const mb = smooth((s - MOVE_B[0]) / (MOVE_B[1] - MOVE_B[0]));
     const mc = smooth((s - MOVE_C[0]) / (MOVE_C[1] - MOVE_C[0]));
-    const reveal = clamp((s - REVEAL[0]) / (REVEAL[1] - REVEAL[0]));
     let k = 0;
     let t = 0;
     let f = 0;
@@ -148,16 +163,18 @@ export function createStory(deps: Deps) {
     }
     const a = variants[k];
     const b = variants[Math.min(n - 1, k + 1)];
-    const inCatalog = s >= C0;
+    // o catálogo já está montado quando as garras começam a cortar a coleção
+    const inCatalog = s >= RIP0;
+    const back = smooth((s - BACK[0]) / (BACK[1] - BACK[0]));
+    const join = reduced ? (s > BACK[0] ? 1 : 0) : smooth((s - JOIN[0]) / (JOIN[1] - JOIN[0]));
 
     // ---------------------------------------------------------- lata e fundo
     if (scene?.ready && !covered) {
       const ultra = variants[0];
       if (!inCatalog) {
         const printed = pair(ultra);
-        const scene0 = bg(ultra);
-        // a primeira cena sobe do preto por trás da lata depois da travessia
-        scene.setWave(printed, printed, null, scene0, scene0 ? reveal : 0, ultra.color.glow, 5.7);
+        // sobre o preto: a primeira cena só aparece no catálogo, depois da coleção
+        scene.setWave(printed, printed, null, null, 0, ultra.color.glow, 5.7);
         // cada trecho da travessia é meia volta; a lata se inclina para o lado
         // em que anda, como quem ganha velocidade, e endireita ao parar
         scene.motion.x = SIDE * ma - 2 * SIDE * mb + SIDE * mc;
@@ -166,17 +183,21 @@ export function createStory(deps: Deps) {
         scene.motion.tilt = 0.05 * (Math.sin(Math.PI * ma) + Math.sin(Math.PI * mb));
         // começa na distância em que a garra da abertura foi medida e recua
         // para abrir espaço à travessia; termina na distância do catálogo
-        scene.stage.shot.z = OPENING_Z + 0.12 * ma - 0.02 * mc;
+        // e, no fim, recua até a lata ficar do tamanho e no lugar da Ultra
+        // no anel da coleção (o topo dele)
+        const z = OPENING_Z + 0.12 * ma - 0.02 * mc;
+        scene.stage.shot.z = z + (RING_Z - z) * back;
+        scene.stage.shot.y = HERO_SHOT.y - RING_DROP * back;
+        scene.stage.shot.ty = HERO_SHOT.ty - RING_DROP * back;
         scene.ingredients.use(ultra.ingredients);
         scene.ingredients.setPresence(smooth((s - 0.1) / 0.6) * (1 - smooth((s - MOVE_C[0]) / 0.45)));
         scene.motion.bgZoomA = scene.motion.bgZoomB = 1.04;
         scene.mixLook(ultra, ultra, 0);
-        scene.particles.setPresence(reveal);
+        scene.particles.setPresence(0);
         videos?.playOnly([ultra.video]);
         labels?.pin([...labelUrls(ultra)]);
         backgrounds?.pin([bgUrl(ultra)]);
-        void pair(variants[1]);
-        void bg(variants[1]);
+        void bg(ultra);
       } else {
         const la = pair(a);
         const lb = pair(b);
@@ -190,6 +211,8 @@ export function createStory(deps: Deps) {
         scene.motion.roll = 0;
         scene.motion.x = 0;
         scene.stage.shot.z = 0.6;
+        scene.stage.shot.y = HERO_SHOT.y;
+        scene.stage.shot.ty = HERO_SHOT.ty;
         scene.ingredients.setPresence(0);
         // a cena se aproxima devagar enquanto a versão está na tela
         scene.motion.bgZoomA = 1.04 + 0.035 * f;
@@ -207,7 +230,7 @@ export function createStory(deps: Deps) {
     }
 
     // ---------------------------------------------------------- interface
-    document.documentElement.classList.toggle('is-dark-stage', s < REVEAL[0] + 0.25);
+    document.documentElement.classList.toggle('is-dark-stage', !inCatalog);
     applyThemeMix(inCatalog ? a : variants[0], inCatalog ? b : variants[0], inCatalog ? t : 0);
     const product = inCatalog ? k + (t >= 0.5 ? 1 : 0) : 0;
     if (product !== shown) {
@@ -221,33 +244,36 @@ export function createStory(deps: Deps) {
     // os textos da travessia: cada um do lado oposto ao da lata
     moves[0].style.opacity = String(smooth((s - 0.55) / 0.35) * (1 - smooth((s - MOVE_B[0]) / 0.25)));
     moves[1].style.opacity = String(smooth((s - 1.65) / 0.35) * (1 - smooth((s - MOVE_C[0]) / 0.25)));
-    catalog.setOpacity(smooth((s - (REVEAL[0] + 0.2)) / 0.3) * (1 - smooth((s - C_END) / 0.25)));
+    // o nome só entra com o rasgo aberto: até lá o palco está à frente dele
+    catalog.setOpacity(smooth((s - C0) / 0.18));
     // a legenda chega no segundo scroll da versão e sai quando a troca começa
     const local = f * SEG;
     const leaving = k < n - 1 ? smooth((local - HOLD * SEG) / 0.15) : 0;
     catalog.setCaption(inCatalog ? smooth((local - 0.35) / 0.3) * (1 - leaving) : 0);
 
-    // ---------------------------------------------------------- rasgo e roda
+    // ---------------------------------------------------------- roda e rasgo
     const tear = reduced ? (s > RIP0 ? 1 : 0) : clamp((s - RIP0) / (RIP_TEAR - RIP0));
     const open = reduced ? clamp((s - RIP0) / (RIP_END - RIP0)) : clamp((s - RIP_TEAR) / (RIP_END - RIP_TEAR));
-    if (reduced) {
-      layer.style.clipPath = 'none';
-      layer.style.opacity = String(open);
-    } else {
-      rip.update(tear, open);
-    }
-    const nowCovered = open >= 1;
+    // a coleção: entra em volta da Ultra, fica até o rasgo terminar de abrir
+    const wheelOn = join > 0 && open < 1;
+    layer.style.visibility = wheelOn ? 'visible' : 'hidden';
+    layer.style.opacity = String(reduced && inCatalog ? 1 - open : join);
+    // o palco passa à frente da coleção e aparece pelos cortes das garras
+    stageEl.style.zIndex = inCatalog && open < 1 ? '5' : '';
+    if (reduced) stageEl.style.opacity = inCatalog ? String(open) : '';
+    else rip.update(tear, open);
+    const nowCovered = join >= 1 && !inCatalog;
     if (nowCovered !== covered) {
       covered = nowCovered;
       onCover(covered);
     }
-    if (tear > 0) {
+    if (wheelOn) {
       const w = s < RING_END ? 0 : s < OPEN_END ? (s - RING_END) / (OPEN_END - RING_END) : 1 + (s - OPEN_END) / ITEM;
       wheel.setTarget(w);
-      wheel.frame(dt);
+      // enquanto a Ultra do palco ainda está à vista, o anel não gira: a
+      // dela no anel fica exatamente em cima
+      wheel.frame(dt, join < 1);
     }
-    // depois da roda, a camada fixa sobe junto com a página até o rodapé
-    layer.style.translate = s > END ? `0 ${(-(s - END) * vh()).toFixed(1)}px` : '';
   }
 
   /** Posição de rolagem de uma versão do catálogo. */

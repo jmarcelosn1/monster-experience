@@ -1,6 +1,6 @@
-// O rasgo entre o hero e a coleção: três garras cortam a tela de cima para
-// baixo e depois se abrem até cobrir tudo. A camada da coleção é recortada pelo
-// desenho das garras (clip-path: path), então ela aparece pelos rasgos; um
+// O rasgo entre a coleção e o catálogo: três garras cortam a tela de cima para
+// baixo e depois se abrem até cobrir tudo. O palco do catálogo é recortado pelo
+// desenho das garras (clip-path: path), então ele aparece pelos rasgos; um
 // traço na cor da versão marca a borda de cada corte.
 
 interface Claw {
@@ -66,7 +66,8 @@ function clawPath(c: Claw, w: number, h: number, tear: number, open: number) {
   return `M${left.join(' L')} L${right.reverse().join(' L')} Z`;
 }
 
-export function createRip(layer: HTMLElement, edge: SVGPathElement, edgeSoft: SVGPathElement) {
+/** `layer` é o que aparece pelos cortes; fechado, fica como estava (`closed`). */
+export function createRip(layer: HTMLElement, edge: SVGPathElement, edgeSoft: SVGPathElement, closed = 'none') {
   const svg = edge.ownerSVGElement!;
   let last = '';
 
@@ -80,7 +81,7 @@ export function createRip(layer: HTMLElement, edge: SVGPathElement, edgeSoft: SV
     last = state;
 
     if (state === 'closed') {
-      layer.style.clipPath = 'inset(0 0 100% 0)';
+      layer.style.clipPath = closed;
       svg.style.opacity = '0';
       return;
     }

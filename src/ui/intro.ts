@@ -239,6 +239,10 @@ export function createIntro(root: HTMLElement, reduced: boolean) {
       .fromTo(hintText, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.2');
   }
 
+  let markStill = () => {};
+  /** Resolve quando o feixe passou e a garra está inteira e parada (2,9 s). */
+  const still = new Promise<void>((resolve) => (markStill = resolve));
+
   const revealed = new Promise<void>((resolve) => {
     // a garra precisa estar decodificada antes do feixe; se demorar, o preto espera
     const ready = Promise.race([logo.decode().catch(() => {}), new Promise((r) => setTimeout(r, 2500))]);
@@ -251,6 +255,7 @@ export function createIntro(root: HTMLElement, reduced: boolean) {
         tl.call(() => lines.flat().forEach((l) => l.classList.add('is-on')), [], 0.8);
         tl.call(() => hint.classList.add('is-on'), [], 1.1);
         tl.set(hintText, { opacity: 1 }, 1.1);
+        tl.call(markStill, [], 0.8);
         tl.call(resolve, [], 1.1);
         canvas.remove();
         return;
@@ -269,6 +274,7 @@ export function createIntro(root: HTMLElement, reduced: boolean) {
       tl.to(sweep, { x: 1.9, duration: 2.2, ease: 'power1.inOut', onUpdate: paint }, 0.6);
       tl.to(sweep, { f: 0, duration: 0.7, ease: 'power1.in', onUpdate: paint }, 2.15);
       tl.call(() => light?.dispose(), [], 2.9);
+      tl.call(markStill, [], 2.95);
 
       // a garra ganha presença enquanto a luz passa
       tl.fromTo(logo, { opacity: 0 }, { opacity: 1, duration: 1.8, ease: 'power1.out' }, 0.8);
@@ -278,7 +284,6 @@ export function createIntro(root: HTMLElement, reduced: boolean) {
       // 3,5 → 4,7: MONSTER, respiro, ENERGY
       type(tl, lines[0], 3.5, 0.6);
       type(tl, lines[1], 4.25, 0.42);
-      // o preparo do 3D roda enquanto a marca descansa
       tl.call(resolve, [], 4.75);
       tl.call(dropCaret, [], 5.4);
     });
@@ -310,5 +315,5 @@ export function createIntro(root: HTMLElement, reduced: boolean) {
     return 2;
   }
 
-  return { revealed, proceed, exit };
+  return { still, revealed, proceed, exit };
 }

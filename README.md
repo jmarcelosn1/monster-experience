@@ -36,7 +36,7 @@ Se os dois computadores mexerem no mesmo arquivo sem enviar antes, o `git pull` 
 
 ## Onde mexer
 
-- `src/story.ts`: o roteiro por scroll (apresentação, catálogo 01–07, rasgo, roda)
+- `src/story.ts`: o roteiro por scroll (apresentação, roda da coleção, rasgo, catálogo)
 - `src/variants.ts`: as sete versões; nenhum outro arquivo testa o id de uma versão
 - `src/ui/intro.ts`: a abertura
 - `src/three/`: palco, lata, luzes, fundo em WebGL, partículas

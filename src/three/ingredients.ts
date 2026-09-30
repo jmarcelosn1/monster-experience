@@ -416,10 +416,10 @@ export function createIngredients() {
    * Compila de antemão os materiais de todos os ingredientes, para o primeiro
    * aparecimento não travar a animação.
    */
-  function warm(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera) {
+  async function warm(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera) {
     use(Object.keys(kits) as IngredientKind[], 1);
     group.visible = true;
-    renderer.compile(scene, camera);
+    await renderer.compileAsync(scene, camera);
     use([]);
     group.visible = false;
   }
