@@ -1,4 +1,4 @@
-# Monster Experience
+# Monster 3D Experience
 
 Experiência web em 3D guiada por scroll: uma lata renderizada em WebGL, sete versões de produto e um roteiro inteiro conduzido pela rolagem da página.
 
@@ -30,8 +30,8 @@ O site conta uma história em quatro atos, todos controlados pelo scroll normal 
 Requisitos: Git e Node.js 22 LTS (o Vite 8 pede Node 20.19 ou mais novo).
 
 ```bash
-git clone https://github.com/jmarcelosn1/monster-experience.git
-cd monster-experience
+git clone https://github.com/jmarcelosn1/monster-3d-experience.git
+cd monster-3d-experience
 npm install
 npm run dev
 ```
